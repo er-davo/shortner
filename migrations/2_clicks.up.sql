@@ -1,0 +1,6 @@
+CREATE TABLE clicks (
+    id BIGSERIAL PRIMARY KEY,
+    url_id BIGINT REFERENCES urls(id) ON DELETE CASCADE,
+    clicked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    user_agent TEXT
+);

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>URL Shortener</title>
+  <style>
+    body { font-family: sans-serif; max-width: 700px; margin: 40px auto; }
+    input, button { padding: 8px; margin: 4px 0; width: 100%; box-sizing: border-box; }
+    .list { margin-top: 20px; }
+    .item { padding: 8px; border-bottom: 1px solid #ccc; }
+    .short { color: blue; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h2>Создать короткую ссылку</h2>
+  <input id="original" type="url" placeholder="Введите оригинальный URL">
+  <button id="createBtn">Создать</button>
+  <div id="result"></div>
+
+  <h3>Аналитика</h3>
+  <input id="shortForStats" placeholder="Короткий код (abc123)">
+  <select id="groupBy">
+    <option value="day">По дням</option>
+    <option value="month">По месяцам</option>
+    <option value="year">По годам</option>
+    <option value="user_agent">По браузерам</option>
+  </select>
+  <button id="statsBtn">Показать</button>
+  <pre id="stats"></pre>
+
+  <h3>Удалить</h3>
+  <input id="deleteId" placeholder="ID записи">
+  <button id="deleteBtn">Удалить</button>
+
+  <script>
+    const api = 'http://localhost:8080';
+
+    document.getElementById('createBtn').onclick = async () => {
+      const original = document.getElementById('original').value;
+      const res = await fetch(api + '/urls', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ original })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        document.getElementById('result').innerHTML =
+          `<div class="item">
+             <div>Оригинал: ${data.original}</div>
+             <div>Короткий: 
+               <a class="short" href="${api}/${data.shortened}" target="_blank">${api}/${data.shortened}</a>
+             </div>
+           </div>`;
+      } else {
+        document.getElementById('result').textContent = 'Ошибка: ' + data.error;
+      }
+    };
+
+    document.getElementById('statsBtn').onclick = async () => {
+      const short = document.getElementById('shortForStats').value;
+      const groupBy = document.getElementById('groupBy').value;
+      const now = new Date();
+      const from = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+      const res = await fetch(api + '/analytics', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          url: short,
+          from: from.toISOString(),
+          to: now.toISOString(),
+          group_by: groupBy
+        })
+      });
+      const data = await res.json();
+      document.getElementById('stats').textContent = JSON.stringify(data, null, 2);
+    };
+
+    document.getElementById('deleteBtn').onclick = async () => {
+      const id = document.getElementById('deleteId').value;
+      const res = await fetch(api + '/urls/' + id, { method: 'DELETE' });
+      const data = await res.json();
+      alert(res.ok ? `Удалено ID=${data.deleted}` : `Ошибка: ${data.error}`);
+    };
+  </script>
+</body>
+</html>

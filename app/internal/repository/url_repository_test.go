@@ -1,0 +1,64 @@
+//go:build integration
+// +build integration
+
+package repository_test
+
+import (
+	"context"
+	"shortner/internal/models"
+	"shortner/internal/repository"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/wb-go/wbf/retry"
+)
+
+func TestURLRepository_CRUD(t *testing.T) {
+	strategy := retry.Strategy{
+		Attempts: 1,
+		Delay:    1 * time.Second,
+		Backoff:  1,
+	}
+	ctx := context.Background()
+	repo := repository.NewURLRepository(db, strategy)
+
+	url := &models.URL{
+		Original:  "https://example.com/test",
+		Shortened: "abc123",
+		CreatedAt: time.Now(),
+	}
+
+	tx, err := db.Master.Begin()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tx.Rollback()
+
+	t.Run("Create", func(t *testing.T) {
+		err := repo.Create(ctx, url)
+		assert.NoError(t, err)
+		assert.NotZero(t, url.ID)
+	})
+
+	t.Run("GetByID", func(t *testing.T) {
+		got, err := repo.GetByID(ctx, url.ID)
+		assert.NoError(t, err)
+		assert.Equal(t, url.Original, got.Original)
+		assert.Equal(t, url.Shortened, got.Shortened)
+	})
+
+	t.Run("GetByURL", func(t *testing.T) {
+		got, err := repo.GetByURL(ctx, url.Shortened)
+		assert.NoError(t, err)
+		assert.Equal(t, url.ID, got.ID)
+	})
+
+	t.Run("Delete", func(t *testing.T) {
+		err := repo.Delete(ctx, url.ID)
+		assert.NoError(t, err)
+
+		_, err = repo.GetByID(ctx, url.ID)
+		assert.Error(t, err)
+	})
+}
