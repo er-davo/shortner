@@ -24,7 +24,7 @@ func NewURLHandler(urlService *service.URLShortenerService, log *zlog.Zerolog) *
 	}
 }
 
-// POST /urls
+// POST /shorten
 func (h *URLHandler) CreateShortenedURL(c *ginext.Context) {
 	var req models.URL
 	if err := c.BindJSON(&req); err != nil {
@@ -49,7 +49,7 @@ func (h *URLHandler) CreateShortenedURL(c *ginext.Context) {
 	c.JSON(http.StatusCreated, req)
 }
 
-// GET /:shortened
+// GET /s/:shortened
 func (h *URLHandler) Redirect(c *ginext.Context) {
 	shortened := c.Param("shortened")
 
@@ -78,7 +78,7 @@ func (h *URLHandler) Redirect(c *ginext.Context) {
 	c.Redirect(http.StatusFound, url.Original)
 }
 
-// DELETE /urls/:id
+// DELETE /shorten/:id
 func (h *URLHandler) DeleteURL(c *ginext.Context) {
 	strID := c.Param("id")
 	id, err := strconv.ParseInt(strID, 10, 64)
@@ -124,8 +124,8 @@ func (h *URLHandler) GetAnalytics(c *ginext.Context) {
 
 // Register all routes
 func (h *URLHandler) RegisterRoutes(r *ginext.Engine) {
-	r.POST("/urls", h.CreateShortenedURL)
-	r.GET("/:shortened", h.Redirect)
-	r.DELETE("/urls/:id", h.DeleteURL)
+	r.POST("/shorten", h.CreateShortenedURL)
+	r.GET("/s/:shortened", h.Redirect)
+	r.DELETE("/shortened/:id", h.DeleteURL)
 	r.POST("/analytics", h.GetAnalytics)
 }
