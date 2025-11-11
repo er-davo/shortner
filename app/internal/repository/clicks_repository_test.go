@@ -4,7 +4,6 @@
 package repository_test
 
 import (
-	"context"
 	"shortner/internal/models"
 	"shortner/internal/repository"
 	"testing"
@@ -20,7 +19,6 @@ func TestClicksRepository_CreateAndAnalytics(t *testing.T) {
 		Delay:    1 * time.Second,
 		Backoff:  1,
 	}
-	ctx := context.Background()
 	urlRepo := repository.NewURLRepository(db, strategy)
 	clickRepo := repository.NewClicksRepository(db, strategy)
 
@@ -29,7 +27,7 @@ func TestClicksRepository_CreateAndAnalytics(t *testing.T) {
 		Shortened: "xyz123",
 		CreatedAt: time.Now(),
 	}
-	assert.NoError(t, urlRepo.Create(ctx, url))
+	assert.NoError(t, urlRepo.Create(t.Context(), url))
 
 	now := time.Now()
 
@@ -41,7 +39,7 @@ func TestClicksRepository_CreateAndAnalytics(t *testing.T) {
 	}
 
 	for _, c := range clicks {
-		err := clickRepo.CreateClick(ctx, c)
+		err := clickRepo.CreateClick(t.Context(), c)
 		assert.NoError(t, err)
 		assert.NotZero(t, c.ID)
 	}
@@ -54,7 +52,7 @@ func TestClicksRepository_CreateAndAnalytics(t *testing.T) {
 			GroupBy: models.ByDay,
 		}
 
-		res, err := clickRepo.GetAnalitics(ctx, params)
+		res, err := clickRepo.GetAnalitics(t.Context(), params)
 		assert.NoError(t, err)
 		assert.Equal(t, len(clicks), res.TotalClicks)
 		assert.GreaterOrEqual(t, len(res.Grouped), 2)
@@ -68,7 +66,7 @@ func TestClicksRepository_CreateAndAnalytics(t *testing.T) {
 			GroupBy: models.ByUserAgent,
 		}
 
-		res, err := clickRepo.GetAnalitics(ctx, params)
+		res, err := clickRepo.GetAnalitics(t.Context(), params)
 		assert.NoError(t, err)
 		assert.Equal(t, len(clicks), res.TotalClicks)
 		assert.Equal(t, 2, len(res.Grouped))

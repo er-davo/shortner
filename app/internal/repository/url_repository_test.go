@@ -4,7 +4,6 @@
 package repository_test
 
 import (
-	"context"
 	"shortner/internal/models"
 	"shortner/internal/repository"
 	"testing"
@@ -20,7 +19,6 @@ func TestURLRepository_CRUD(t *testing.T) {
 		Delay:    1 * time.Second,
 		Backoff:  1,
 	}
-	ctx := context.Background()
 	repo := repository.NewURLRepository(db, strategy)
 
 	url := &models.URL{
@@ -30,29 +28,29 @@ func TestURLRepository_CRUD(t *testing.T) {
 	}
 
 	t.Run("Create", func(t *testing.T) {
-		err := repo.Create(ctx, url)
+		err := repo.Create(t.Context(), url)
 		assert.NoError(t, err)
 		assert.NotZero(t, url.ID)
 	})
 
 	t.Run("GetByID", func(t *testing.T) {
-		got, err := repo.GetByID(ctx, url.ID)
+		got, err := repo.GetByID(t.Context(), url.ID)
 		assert.NoError(t, err)
 		assert.Equal(t, url.Original, got.Original)
 		assert.Equal(t, url.Shortened, got.Shortened)
 	})
 
 	t.Run("GetByURL", func(t *testing.T) {
-		got, err := repo.GetByURL(ctx, url.Shortened)
+		got, err := repo.GetByURL(t.Context(), url.Shortened)
 		assert.NoError(t, err)
 		assert.Equal(t, url.ID, got.ID)
 	})
 
 	t.Run("Delete", func(t *testing.T) {
-		err := repo.Delete(ctx, url.ID)
+		err := repo.Delete(t.Context(), url.ID)
 		assert.NoError(t, err)
 
-		_, err = repo.GetByID(ctx, url.ID)
+		_, err = repo.GetByID(t.Context(), url.ID)
 		assert.Error(t, err)
 	})
 }
