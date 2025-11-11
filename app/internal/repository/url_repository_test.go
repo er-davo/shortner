@@ -29,12 +29,6 @@ func TestURLRepository_CRUD(t *testing.T) {
 		CreatedAt: time.Now(),
 	}
 
-	tx, err := db.Master.Begin()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer tx.Rollback()
-
 	t.Run("Create", func(t *testing.T) {
 		err := repo.Create(ctx, url)
 		assert.NoError(t, err)

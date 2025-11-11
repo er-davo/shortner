@@ -24,12 +24,6 @@ func TestClicksRepository_CreateAndAnalytics(t *testing.T) {
 	urlRepo := repository.NewURLRepository(db, strategy)
 	clickRepo := repository.NewClicksRepository(db, strategy)
 
-	tx, err := db.Master.Begin()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer tx.Rollback()
-
 	url := &models.URL{
 		Original:  "https://example.com/page",
 		Shortened: "xyz123",
